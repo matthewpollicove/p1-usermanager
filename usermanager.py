@@ -555,6 +555,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.refresh_table()
         self.status_label.setText("Reverted to default columns")
 
+    def _get_column_labels(self):
+        """Get column labels based on friendly name setting."""
+        return [self.friendly_names.get(col, col) for col in self.columns] if self.use_friendly_names else self.columns
+
     def _apply_column_widths(self):
         """Apply saved column widths to the table."""
         for c, col in enumerate(self.columns):
@@ -564,6 +568,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def refresh_table_headers(self):
         """Refresh only the table headers."""
         self.u_table.setHorizontalHeaderLabels(self._get_column_labels())
+
+    def update_user_field(self, user_id, col_name, new_data):
         """Update a specific field of a user via API."""
         user = next((u for u in self.users_cache if u['id'] == user_id), None)
         if user:
@@ -710,6 +716,14 @@ Note: All operations require valid credentials and will show progress. Status up
         self.selected_columns = [self.columns[self.u_table.horizontalHeader().visualIndex(i)] for i in range(len(self.columns))]
         self.save_columns_to_config()
         self.status_label.setText("Column order updated")
+
+    def on_column_resized(self, logicalIndex, oldSize, newSize):
+        """Save column width when resized."""
+        if logicalIndex < len(self.columns):
+            col_name = self.columns[logicalIndex]
+            self.column_widths[col_name] = newSize
+            self.save_columns_to_config()
+            self.status_label.setText(f"Column width updated: {col_name}")
 
     def on_column_resized(self, logicalIndex, oldSize, newSize):
         """Save column width when resized."""
